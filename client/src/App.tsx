@@ -1,10 +1,11 @@
-import { useContext, useState, createContext } from 'react'
+import { useContext, useState, createContext, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import UserProfile, { AccountSettings } from './pages/UserProfile'
 import ForgotPassword, { ResetPassword } from './pages/Auth/ForgotPassword'
 import Signup from './pages/Auth/Signup'
+import "react-toastify/dist/ReactToastify.css"
 
 const UserContext = createContext({
   firstname: "John",
@@ -19,12 +20,18 @@ const UserContext = createContext({
   userActivity: []
 });
 
+const LazyDashboard = lazy(()=> import('./pages/Dashboard'))
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        <Route path='/' element={<Dashboard />}>
+        <Route path='/' element={
+          <Suspense fallback={<div className='flex items-center justify-center text-xl h-screen'>Please wait...</div>}>
+            <LazyDashboard />
+          </Suspense>
+          }>
           <Route path='account' element={<AccountSettings />}>
             <Route path='profile' element={<UserProfile />} />
             {/* <Route path='settings' element={<UserProfile />} /> */}

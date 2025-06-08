@@ -1,23 +1,42 @@
-import Avatar from "@mui/material/Avatar"
-import { useContext, useState } from "react"
+import { useContext, useRef, useState } from "react"
 import { UserContext } from "../../App";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { CiEdit } from "react-icons/ci";
 import Button from "../../components/Button";
 import Input, { MultilineInput } from "../../components/Input";
-import { FaCamera, FaCameraRetro } from "react-icons/fa";
-import { CiCamera } from "react-icons/ci";
-import { MdCamera, MdCameraEnhance, MdCameraRear } from "react-icons/md";
-// import { GiPadlock } from "react-icons/gi";
+import { FaCamera } from "react-icons/fa";
 import Modal from "../../components/Modal";
+
 import UserAvatar from "../../components/UserAvatar";
 import { Popover } from "@mui/material";
+
+
+// const CameraModal = lazy(()=> import('../../components/Modal'))
 
 export default function UserProfile() {
     const user = useContext(UserContext);
     const [openProfileModal, setOpenProfileModal] = useState(true);
+    const [openCameraModal, setOpenCameraModal] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [openPopover, setOpenPopover] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const cameraRef = useRef<HTMLVideoElement | null>(null);
 
+    let streamRef = useRef<MediaStream>(null);
+
+    async function openCamera(constraints: MediaStreamConstraints) {
+        let stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            if (cameraRef.current) {
+                cameraRef.current.srcObject = stream
+            }
+            streamRef.current = stream
+        } catch (err) {
+            console.log(err);
+            setError(err.message)
+        }
+    }
     return <div>
         <div className="bg-blue-300 h-52 rounded  relative"></div>
         <CiEdit className="m-10 w-7 h-7 cursor-pointer absolute hover:scale-110 transition-all" title="edit profile" onClick={() => setOpenProfileModal(true)} />
@@ -32,28 +51,37 @@ export default function UserProfile() {
 
 
         <Modal size="lg" title="Edit profile" openModal={openProfileModal} closeModal={() => setOpenProfileModal(false)}>
-            <div className="w-fit mx-auto relative" aria-describedby="profilepicture">
+            <div className="w-fit mx-auto relative" aria-describedby="profilepicture ">
                 <UserAvatar sx={{ width: 155, height: 155 }} alt='account'></UserAvatar>
-                <div className="w-8 h-8 right-2 bottom-4 rounded-full absolute bg-white flex justify-center items-center">
-                    <FaCamera size='25px' className="  hover:scale-95 transition-all cursor-pointer" onClick={() => setOpenPopover(!openPopover)}></FaCamera>
-                    <Popover
-                        id="profilepicture"
-                        open={openPopover}
-                        onClose={() => setOpenPopover(false)}
-                        anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'right'
-                        }}
-                    >
-                        <ul className="p-3">
-                            <li className="cursor-pointer hover:text-orange-700">View picture</li>
-                            <li className="cursor-pointer my-2 hover:text-orange-700">Open camera</li>
-                            <li className="cursor-pointer hover:text-orange-700">
-                                Upload from device
-                            </li>
-                        </ul>
-                    </Popover>
+                <div className="w-8 h-8 right-2 bottom-4 rounded-full absolute bg-white flex justify-center items-center ">
+                    <FaCamera size='25px' className="hover:scale-95 transition-all cursor-pointer" onClick={(e) => {
+                        setOpenPopover(!openPopover)
+                        setAnchorEl(e.currentTarget)
+                    }}></FaCamera>
                 </div>
+                <Popover
+                    id="profilepicture"
+                    open={openPopover}
+                    onClose={() => setOpenPopover(false)}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right'
+                    }}
+                    anchorEl={anchorEl}
+                >
+                    <ul className="p-3">
+                        <li className="cursor-pointer hover:text-orange-700">View picture</li>
+                        <li className="cursor-pointer my-2 hover:text-orange-700"
+                            onClick={() => {
+                                setOpenCameraModal(true)
+                                setOpenPopover(false)
+                            }}
+                        >Open camera</li>
+                        <li className="cursor-pointer hover:text-orange-700">
+                            Upload from device
+                        </li>
+                    </ul>
+                </Popover>
             </div>
             {/* <CiCamera size='30px' className="mx-[53%] -mt-20"></CiCamera> */}
             <div className="grid grid-cols-2 gap-x-6 mt-3">
@@ -68,7 +96,32 @@ export default function UserProfile() {
                 <Button styles="mt-7">Update</Button>
             </div>
         </Modal>
+        {
+            openCameraModal && <Modal openModal={openCameraModal} closeModal={() => {
+                console.log('Stream ref on closing' + streamRef.current)
+                streamRef.current?.getVideoTracks().forEach((track) => {
+                    track.stop()
+                })
+                if (cameraRef.current) {
+                    cameraRef.current.srcObject = null;
+                }
+                if (cameraRef.current) {
+                    cameraRef.current.pause();
+                    cameraRef.current.srcObject = null;
+                }
 
+                streamRef.current = null;
+                console.log('Stream ref after closing' + streamRef.current)
+                setOpenCameraModal(false)
+            }}
+                onRender={() => openCamera({ video: true, audio: false })}
+                size="md"
+            >   {
+                    error ? <p className="text-red-600 text-center">Error: {error}, Please ensure you enable access to your camera.</p> :
+                        <video className="h-max w-full" ref={cameraRef} autoPlay={true}></video>
+                }
+            </Modal>
+        }
     </div>
 }
 
