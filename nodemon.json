@@ -1,0 +1,7 @@
+{
+  "watch": ["server"],
+  "ext": "ts",
+  "execMap": {
+    "ts": "tsc --noEmit && node --no-warnings=ExperimentalWarning --loader ts-node/esm/transpile-only"
+  }
+}
