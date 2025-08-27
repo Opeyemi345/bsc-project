@@ -1,54 +1,136 @@
-# React + TypeScript + Vite
+# OAUSCONNECT - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Final year project at Ondo State University - A social media platform for university students.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Modern UI**: Built with React 19 and TypeScript
+- **Responsive Design**: Tailwind CSS with Material-UI components
+- **Authentication**: Complete auth flow with JWT tokens
+- **Real-time Updates**: Live content feed and interactions
+- **Content Creation**: Rich text editor for posts
+- **Community Features**: Join and manage communities
+- **User Profiles**: Customizable user profiles
+- **Interactive Elements**: Voting, commenting, and sharing
+- **Toast Notifications**: User feedback with react-toastify
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + Material-UI
+- **Routing**: React Router v7
+- **State Management**: React Context API
+- **HTTP Client**: Fetch API with custom service layer
+- **Icons**: React Icons
+- **Notifications**: React Toastify
+- **Development**: ESLint + TypeScript ESLint
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn package manager
+- Backend server running (see server README)
+
+### Installation
+
+1. Navigate to the client directory:
+```bash
+cd client
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+2. Install dependencies:
+```bash
+npm install
 ```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file:
+```env
+VITE_API_URL=http://localhost:5000
+VITE_APP_NAME=OAUSCONNECT
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory.
+
+## Project Structure
+
+```
+client/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── contexts/       # React contexts (Auth, etc.)
+│   ├── pages/          # Page components
+│   ├── services/       # API service layer
+│   ├── assets/         # Static assets
+│   └── App.tsx         # Main app component
+├── public/             # Public assets
+└── index.html          # HTML template
+```
+
+## Key Components
+
+### Authentication
+- `AuthContext` - Global authentication state
+- `ProtectedRoute` - Route protection wrapper
+- Login/Signup forms with validation
+
+### Content Management
+- `ContentCard` - Display individual posts
+- `Feed` - Main content feed
+- `CreatePost` - Post creation interface
+
+### Community Features
+- `CommunityCard` - Community display component
+- Community management interfaces
+
+### API Integration
+- `api.ts` - Centralized API service layer
+- Type-safe API calls with proper error handling
+- Automatic token management
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## Environment Variables
+
+- `VITE_API_URL` - Backend API URL
+- `VITE_APP_NAME` - Application name
+- `VITE_ENABLE_NOTIFICATIONS` - Enable/disable notifications
+- `VITE_ENABLE_DARK_MODE` - Enable/disable dark mode
+- `VITE_ENABLE_FILE_UPLOAD` - Enable/disable file uploads
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.

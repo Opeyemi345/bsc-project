@@ -1,7 +1,8 @@
 // import type { HydratedDocument } from "mongoose";
-import type { UserType } from "./interfaces/User";
+import type { UserType } from "../types/User";
 
 export class UserResponse {
+    id?: string;
     firstname?: string;
     lastname?: string;
     username?: string;
@@ -13,7 +14,8 @@ export class UserResponse {
     phone?: string;
     avater?: string;
 
-    constructor(user: UserType) {
+    constructor(user: any) {
+        this.id = user._id?.toString() || user.id;
         this.firstname = user.firstname
         this.lastname = user.lastname
         this.username = user.username

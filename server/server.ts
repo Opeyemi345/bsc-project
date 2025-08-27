@@ -1,5 +1,10 @@
-import app from "./app.ts";
-import { connectToDb } from "./config/index.ts";
+import dotenv from "dotenv";
+
+// Load environment variables first
+dotenv.config();
+
+import app from "./app";
+import { connectToDb } from "./config/index";
 
 const PORT = process.env.PORT || 5000
 

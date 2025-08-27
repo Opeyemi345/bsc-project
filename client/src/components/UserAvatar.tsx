@@ -1,6 +1,5 @@
-import { UserContext } from "../App";
+import { useAuth } from "../contexts/AuthContext";
 import Avatar from "@mui/material/Avatar";
-import { useContext } from "react";
 
 interface AvatarProps {
     sx: object
@@ -9,9 +8,10 @@ interface AvatarProps {
 }
 
 export default function UserAvatar(props: AvatarProps) {
-    const {sx, className, ...otherProps} = props
+    const { sx, className, ...otherProps } = props
     // console.log(otherProps)
-    const {pictureUrl} = useContext(UserContext);
+    const { user } = useAuth();
+    const pictureUrl = user?.avatar;
     // console.log(pictureUrl)
-    return <Avatar src={pictureUrl} sx={sx} className={className} {...otherProps}/>
+    return <Avatar src={pictureUrl} sx={sx} className={className} {...otherProps} />
 }

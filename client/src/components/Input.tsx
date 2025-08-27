@@ -1,20 +1,32 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ChangeEvent } from "react";
 
 interface InputProps {
     type?: string,
     text: string,
-    value: string,
+    value?: string,
     placeholder: string,
     innerStyle?: string,
     outerStyle?: string,
-    error: boolean,
-    errorMessage: string,
+    error?: boolean,
+    errorMessage?: string,
     icon?: ReactNode,
-    otherProps: object
+    otherProps?: object,
+    onChange?: (e: ChangeEvent<HTMLInputElement>) => void
 }
 
 
-export default function Input({ type, value, innerStyle, outerStyle, placeholder, text, icon, error, errorMessage = 'An error occured.' }: InputProps) {
+export default function Input({
+    type,
+    value = '',
+    innerStyle,
+    outerStyle,
+    placeholder,
+    text,
+    icon,
+    error = false,
+    errorMessage = 'An error occurred.',
+    onChange
+}: InputProps) {
     return <div className='m-2'>
         {
             text && <label htmlFor={text} className={''}>{text}</label>
@@ -23,19 +35,30 @@ export default function Input({ type, value, innerStyle, outerStyle, placeholder
             {
                 icon && <div className='p-1 border-r-2'>{icon}</div>
             }
-            <input type={type ? type : 'text'}
+            <input
+                type={type ? type : 'text'}
                 value={value}
                 placeholder={placeholder}
                 className={`${innerStyle} w-full outline-none px-2`}
                 id={text}
+                onChange={onChange}
             />
         </div>
         {error && <small className='text-red-500'>{errorMessage}</small>}
     </div>
 }
 
-export function MultilineInput({ text, value, innerStyle, outerStyle, placeholder, icon, error, errorMessage, otherProps }: InputProps) {
-    console.log(otherProps);
+export function MultilineInput({
+    text,
+    value = '',
+    innerStyle,
+    outerStyle,
+    placeholder,
+    icon,
+    error = false,
+    errorMessage = 'An error occurred.',
+    onChange
+}: InputProps & { onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void }) {
     return <div className='ml-2 mt-3'>
         {
             text && <label htmlFor={text} className={''}>{text}</label>
@@ -49,6 +72,7 @@ export function MultilineInput({ text, value, innerStyle, outerStyle, placeholde
                 placeholder={placeholder}
                 className={`${innerStyle} w-full outline-none px-2`}
                 rows={5}
+                onChange={onChange}
             />
         </div>
         {error && <small className='text-red-500'>{errorMessage}</small>}

@@ -21,9 +21,9 @@
     "noUncheckedSideEffectImports": true,
 
     "paths": {
-      "@/*": ["./client/src/*"]
+      "@/*": ["./src"]
     }
   },
-  "include": ["client/src", "vite.config.ts"],
+  "include": ["src", "vite.config.ts"],
   "exclude": ["node_modules"]
 }
