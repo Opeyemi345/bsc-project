@@ -35,7 +35,7 @@ function App() {
             <Route path='chat' element={<Chat />} />
             <Route path='community' element={<Communities />} />
             <Route path='community/:id' element={<CommunityDetail />} />
-            <Route path='notifications-test' element={<NotificationTest />} />
+            {/* <Route path='notifications-test' element={<NotificationTest />} /> */}
             <Route path='user/:id' element={<p>User 1 profile</p>}></Route>
             <Route path='post/:id' element={<PostDetail />}></Route>
           </Route>

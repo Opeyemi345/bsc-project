@@ -16,7 +16,7 @@ import { userApi, contentApi, type Content } from "../../services/api";
 // const CameraModal = lazy(()=> import('../../components/Modal'))
 
 export default function UserProfile() {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [openProfileModal, setOpenProfileModal] = useState(false);
     const [openCameraModal, setOpenCameraModal] = useState(false);
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -27,7 +27,12 @@ export default function UserProfile() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const [activeTab, setActiveTab] = useState<'posts' | 'about'>('posts');
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [showImageViewer, setShowImageViewer] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
     const cameraRef = useRef<HTMLVideoElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     // Form data for profile editing
@@ -38,8 +43,6 @@ export default function UserProfile() {
         bio: user?.bio || '',
         phone: ''
     });
-
-    let streamRef = useRef<MediaStream>(null);
 
     // Fetch user posts
     const fetchUserPosts = async () => {
@@ -123,26 +126,33 @@ export default function UserProfile() {
             const result = await response.json();
 
             if (result.success) {
-                toast.success('Profile picture updated successfully!');
-
-                // Update the user's avatar in the backend
+                // Update the user's avatar in the backend using the correct field name
                 try {
                     const updateResponse = await userApi.updateProfile({
-                        avatar: result.data.url
+                        avater: result.data.url // Note: using 'avater' to match backend schema
                     });
 
                     if (updateResponse.success) {
-                        // Refresh the page to show the new avatar
-                        window.location.reload();
+                        toast.success('Profile picture updated successfully!');
+                        // Update user context instead of page reload
+                        if (updateUser) {
+                            await updateUser({ avater: result.data.url });
+                        }
+                        // Close the profile modal if it's open
+                        setOpenProfileModal(false);
+                    } else {
+                        toast.error('Failed to update profile with new avatar');
                     }
-                } catch (updateError) {
-                    toast.success('Avatar uploaded but profile update failed. Please refresh the page.');
+                } catch (updateError: any) {
+                    console.error('Profile update error:', updateError);
+                    toast.error('Avatar uploaded but profile update failed');
                 }
             } else {
                 toast.error(result.message || 'Failed to upload profile picture');
             }
-        } catch (error) {
-            toast.error('Failed to upload profile picture');
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            toast.error('Failed to upload profile picture. Please try again.');
         } finally {
             setIsUploadingAvatar(false);
         }
@@ -164,7 +174,95 @@ export default function UserProfile() {
                 return;
             }
 
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setPreviewImage(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+
             handleProfilePictureUpload(file);
+        }
+        // Reset file input
+        e.target.value = '';
+    };
+
+    // Drag and drop handlers
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                toast.error('Please select an image file');
+                return;
+            }
+
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('File size must be less than 5MB');
+                return;
+            }
+
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setPreviewImage(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+
+            handleProfilePictureUpload(file);
+        }
+    };
+
+    // Capture photo from camera
+    const capturePhoto = () => {
+        if (cameraRef.current && canvasRef.current) {
+            const video = cameraRef.current;
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+
+            if (context) {
+                // Set canvas dimensions to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Draw video frame to canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert canvas to blob
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        // Create file from blob
+                        const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+
+                        // Stop camera stream
+                        streamRef.current?.getVideoTracks().forEach((track) => {
+                            track.stop();
+                        });
+
+                        // Close camera modal
+                        setOpenCameraModal(false);
+
+                        // Upload the captured photo
+                        handleProfilePictureUpload(file);
+                    }
+                }, 'image/jpeg', 0.8);
+            }
         }
     };
 
@@ -176,6 +274,7 @@ export default function UserProfile() {
                 cameraRef.current.srcObject = stream
             }
             streamRef.current = stream
+            setError(''); // Clear any previous errors
         } catch (err: any) {
             console.log(err);
             setError(err.message)
@@ -344,11 +443,23 @@ export default function UserProfile() {
 
         <Modal size="lg" title="Edit profile" openModal={openProfileModal} closeModal={() => setOpenProfileModal(false)}>
             <form onSubmit={handleProfileUpdate}>
-                <div className="w-fit mx-auto relative" aria-describedby="profilepicture">
+                <div
+                    className={`w-fit mx-auto relative transition-all duration-200 ${isDragOver ? 'scale-105 ring-4 ring-blue-300' : ''
+                        }`}
+                    aria-describedby="profilepicture"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
                     <UserAvatar sx={{ width: 155, height: 155 }} alt='account' />
                     {isUploadingAvatar && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
                             <div className="text-white text-sm">Uploading...</div>
+                        </div>
+                    )}
+                    {isDragOver && (
+                        <div className="absolute inset-0 bg-blue-500 bg-opacity-30 rounded-full flex items-center justify-center">
+                            <div className="text-white text-sm font-medium">Drop image here</div>
                         </div>
                     )}
                     <div className="w-8 h-8 right-2 bottom-4 rounded-full absolute bg-white flex justify-center items-center">
@@ -372,7 +483,15 @@ export default function UserProfile() {
                         anchorEl={anchorEl}
                     >
                         <ul className="p-3">
-                            <li className="cursor-pointer hover:text-orange-700">View picture</li>
+                            <li
+                                className="cursor-pointer hover:text-orange-700"
+                                onClick={() => {
+                                    setShowImageViewer(true);
+                                    setOpenPopover(false);
+                                }}
+                            >
+                                View picture
+                            </li>
                             <li className="cursor-pointer my-2 hover:text-orange-700"
                                 onClick={() => {
                                     setOpenCameraModal(true)
@@ -460,32 +579,98 @@ export default function UserProfile() {
                 </div>
             </form>
         </Modal>
-        {
-            openCameraModal && <Modal openModal={openCameraModal} closeModal={() => {
-                console.log('Stream ref on closing' + streamRef.current)
-                streamRef.current?.getVideoTracks().forEach((track) => {
-                    track.stop()
-                })
-                if (cameraRef.current) {
-                    cameraRef.current.srcObject = null;
-                }
-                if (cameraRef.current) {
-                    cameraRef.current.pause();
-                    cameraRef.current.srcObject = null;
-                }
-
-                streamRef.current = null;
-                console.log('Stream ref after closing' + streamRef.current)
-                setOpenCameraModal(false)
-            }}
+        {/* Camera Modal */}
+        {openCameraModal && (
+            <Modal
+                title="Take Profile Picture"
+                openModal={openCameraModal}
+                closeModal={() => {
+                    streamRef.current?.getVideoTracks().forEach((track) => {
+                        track.stop()
+                    })
+                    if (cameraRef.current) {
+                        cameraRef.current.pause();
+                        cameraRef.current.srcObject = null;
+                    }
+                    streamRef.current = null;
+                    setError('');
+                    setOpenCameraModal(false)
+                }}
                 onRender={() => openCamera({ video: true, audio: false })}
                 size="md"
-            >   {
-                    error ? <p className="text-red-600 text-center">Error: {error}, Please ensure you enable access to your camera.</p> :
-                        <video className="h-max w-full" ref={cameraRef} autoPlay={true}></video>
-                }
+            >
+                <div className="space-y-4">
+                    {error ? (
+                        <p className="text-red-600 text-center">
+                            Error: {error}. Please ensure you enable access to your camera.
+                        </p>
+                    ) : (
+                        <>
+                            <div className="relative">
+                                <video
+                                    className="w-full h-64 bg-black rounded-lg"
+                                    ref={cameraRef}
+                                    autoPlay={true}
+                                    playsInline
+                                />
+                                <canvas
+                                    ref={canvasRef}
+                                    className="hidden"
+                                />
+                            </div>
+
+                            <div className="flex justify-center space-x-4">
+                                <Button
+                                    type="button"
+                                    styles="bg-gray-500 hover:bg-gray-600"
+                                    onClick={() => {
+                                        streamRef.current?.getVideoTracks().forEach((track) => {
+                                            track.stop()
+                                        });
+                                        setOpenCameraModal(false);
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="button"
+                                    styles="bg-blue-600 hover:bg-blue-700"
+                                    onClick={capturePhoto}
+                                    loading={isUploadingAvatar}
+                                >
+                                    <FaCamera className="w-4 h-4 mr-2" />
+                                    Capture Photo
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </div>
             </Modal>
-        }
+        )}
+
+        {/* Image Viewer Modal */}
+        {showImageViewer && (
+            <Modal
+                title="Profile Picture"
+                openModal={showImageViewer}
+                closeModal={() => setShowImageViewer(false)}
+                size="lg"
+            >
+                <div className="flex justify-center">
+                    {user?.avater ? (
+                        <img
+                            src={user.avater}
+                            alt="Profile"
+                            className="max-w-full max-h-96 rounded-lg object-contain"
+                        />
+                    ) : (
+                        <div className="w-64 h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <p className="text-gray-500">No profile picture</p>
+                        </div>
+                    )}
+                </div>
+            </Modal>
+        )}
     </div>
 }
 

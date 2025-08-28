@@ -223,7 +223,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
 
         // Attach user to request (using type assertion)
         (req as any).user = {
-            id: user._id,
+            id: String(user._id), // Ensure ID is a string
             firstname: user.firstname,
             lastname: user.lastname,
             email: user.email,

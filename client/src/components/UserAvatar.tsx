@@ -9,9 +9,9 @@ interface AvatarProps {
 
 export default function UserAvatar(props: AvatarProps) {
     const { sx, className, ...otherProps } = props
-    // console.log(otherProps)
     const { user } = useAuth();
-    const pictureUrl = user?.avatar;
-    // console.log(pictureUrl)
+    // Use 'avater' to match the backend field name (note: this is a typo in the backend)
+    const pictureUrl = user?.avater || user?.avatar;
+    console.log('UserAvatar - user:', user?.firstname, 'pictureUrl:', pictureUrl);
     return <Avatar src={pictureUrl} sx={sx} className={className} {...otherProps} />
 }

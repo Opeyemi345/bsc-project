@@ -24,7 +24,7 @@ function Contents() {
                 <li className="m-3"><NavLink to={'/'} className={({ isActive }) => isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}>Home</NavLink></li>
                 <li className="m-3"><NavLink to={'/chat'} className={({ isActive }) => isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}>Chat</NavLink></li>
                 <li className="m-3"><NavLink to={'/community'} className={({ isActive }) => isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}>Community</NavLink></li>
-                <li className="m-3"><NavLink to={'/notifications-test'} className={({ isActive }) => isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}>🔔 Test</NavLink></li>
+                {/* <li className="m-3"><NavLink to={'/notifications-test'} className={({ isActive }) => isActive ? 'text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600'}>🔔 Test</NavLink></li> */}
             </ul>
         </menu>
 

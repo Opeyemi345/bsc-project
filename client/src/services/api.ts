@@ -233,6 +233,18 @@ export const userApi = {
   searchUsers: async (query: string): Promise<ApiResponse<User[]>> => {
     return apiRequest<User[]>(`/users/search?q=${encodeURIComponent(query)}`);
   },
+
+  uploadAvatar: async (file: File): Promise<ApiResponse<{ url: string; publicId: string }>> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    return apiRequest<{ url: string; publicId: string }>('/upload/avatar', {
+      method: 'POST',
+      body: formData,
+      // Don't set Content-Type header, let browser set it with boundary for FormData
+      headers: {},
+    });
+  },
 };
 
 // Content API

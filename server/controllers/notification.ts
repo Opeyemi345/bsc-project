@@ -72,12 +72,17 @@ export const sendTestNotification = async (req: CustomRequest, res: Response, ne
     const userId = req.user?.id;
     const { title = 'Test Notification', body = 'This is a test notification from OausConnect!' } = req.body;
 
+    console.log('Test notification - userId:', userId, 'type:', typeof userId);
+
     if (!userId) {
       return next(new AppError('User not authenticated', 401));
     }
 
+    // Ensure userId is a string
+    const userIdString = String(userId);
+
     const success = await pushNotificationService.sendNotificationToUser(
-      userId,
+      userIdString,
       title,
       body,
       {
@@ -223,7 +228,7 @@ export const getNotificationStatus = async (req: Request, res: Response, next: N
       success: true,
       data: {
         configured: isConfigured,
-        message: isConfigured 
+        message: isConfigured
           ? 'Push notification service is configured and ready'
           : 'Push notification service is not configured - Firebase Admin SDK credentials missing',
       },

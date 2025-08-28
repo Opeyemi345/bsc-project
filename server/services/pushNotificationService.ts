@@ -43,8 +43,19 @@ class PushNotificationService {
   async storeUserToken(userId: string, token: string, platform: 'web' | 'android' | 'ios' = 'web'): Promise<boolean> {
     if (!this.isConfigured) return false;
 
+    // Validate inputs
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.error('Invalid userId provided to storeUserToken:', userId);
+      return false;
+    }
+
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+      console.error('Invalid token provided to storeUserToken');
+      return false;
+    }
+
     try {
-      const tokenDoc = adminFirestore.collection(FCM_TOKENS_COLLECTION).doc(userId);
+      const tokenDoc = adminFirestore.collection(FCM_TOKENS_COLLECTION).doc(userId.trim());
       await tokenDoc.set({
         userId,
         token,
